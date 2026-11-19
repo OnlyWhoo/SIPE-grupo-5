@@ -1,20 +1,17 @@
-# SIPE GRUPO 5 — SISTEMA INDEPENDIENTE DE PRÉSTAMOS ESTUDIANTILES
+# SIPE GRUPO 5 — INSTALACIÓN RÁPIDA
 
-## Guía rápida para el profesor
+1. Descargue [SIPE-GRUPO-5-ENTREGA-FINAL.zip](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/download/v1.0.1/SIPE-GRUPO-5-ENTREGA-FINAL.zip).
+2. Descomprima la carpeta `SIPE-grupo-5` dentro de `htdocs` de XAMPP.
+3. Abra el panel de XAMPP.
+4. Inicie **Apache** y **MySQL**.
+5. Abra `http://localhost/SIPE-grupo-5/` en el navegador.
+6. Inicie sesión con el correo **`profesor@sipe.local`** y la contraseña **`Sipe2026!`**.
 
-1. Descargue [SIPE-GRUPO-5-ENTREGA-FINAL.zip](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/download/v1.0.0/SIPE-GRUPO-5-ENTREGA-FINAL.zip) desde [GitHub Releases](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.0).
-2. Extraiga el ZIP dentro de `C:\xampp\htdocs`. El archivo de entrada debe quedar en `C:\xampp\htdocs\SIPE-grupo-5\index.php`.
-3. Inicie **Apache** y **MySQL** en el panel de XAMPP. Abra [SIPE Grupo 5 en localhost](http://localhost/SIPE-grupo-5/).
-4. En el asistente, indique una conexión MySQL autorizada y una base nueva, como `sipe_grupo_5`. Si ese nombre ya existe, elija `sipe_grupo_5_evaluacion`. En XAMPP, el puerto habitual es **3306**. Los valores de usuario y contraseña MySQL dependen de su instalación.
-5. Cree una contraseña de evaluación de al menos 15 caracteres. Al finalizar, inicie sesión con **`profesor@sipe.local`** y la contraseña que eligió. Las visitas posteriores abren el sistema con la misma base.
+En el primer acceso, SIPE prepara su base automáticamente con la configuración estándar de XAMPP y abre el inicio de sesión. Las credenciales son exclusivamente para evaluación académica local. Si cambia el nombre de la carpeta antes de instalar, use ese nombre en la URL.
 
-## Propósito y alcance
+## Tecnología
 
-Entrega académica del Grupo 5 para la **Fundación Academia de Dibujo Profesional**. SIPE registra la disponibilidad y los movimientos de recursos institucionales, permite consultar antecedentes de los prestatarios y conserva la trazabilidad de cada operación. Esta edición incorpora la versión verificada de SIPE V2 con una instalación independiente para evaluación.
-
-## Tecnologías y requisitos
-
-Apache y PHP de XAMPP, PHP **8.2 o superior**, MariaDB **10.4 o superior** o un servidor MySQL compatible con el esquema y sus restricciones. La entrega se ensayó con Apache **2.4.65**, PHP **8.3.36** y MariaDB **10.11.16** de XAMPP. Se requieren las extensiones PHP `pdo_mysql`, `mbstring`, `xmlwriter`, `dom`, `session` y `hash`, además de `allow_url_fopen`, `mod_rewrite` y un `.htaccess` activo. El ZIP trae las dependencias de ejecución. El asistente realiza la carga de datos desde el navegador.
+SIPE Grupo 5 es la entrega académica del Sistema Independiente de Préstamos Estudiantiles para la Fundación Academia de Dibujo Profesional. Usa Apache, PHP 8.2 o superior y MariaDB de XAMPP. El ZIP incluye las dependencias PHP. El entorno probado fue Apache 2.4.65, PHP 8.3.36 y MariaDB 10.11.16.
 
 ## Módulos y reglas de operación
 
@@ -41,27 +38,24 @@ Consulte el [manual de usuario](documentacion/MANUAL-DE-USUARIO.md) para recorre
 
 La interfaz llama a controladores PHP, los servicios aplican las reglas de préstamo y PDO ejecuta consultas preparadas en MariaDB. Consulte la [arquitectura](documentacion/ARQUITECTURA.md).
 
-## Base de datos y seguridad
+## Base e inicialización
 
-La instalación restaura **546 filas de aplicación** en 15 tablas, incluidas **124 personas**, **150 recursos**, **123 fotografías** y **124 tokens QR**. Se incluyen los registros de préstamos, reservas, sanciones, inspección y auditoría. Las 11 referencias pendientes se documentan aparte. El [informe de datos](documentacion/BASE-DE-DATOS.md) explica el registro adicional respecto al conteo anterior.
+SIPE se conecta mediante PDO a `127.0.0.1:3306` como `root` con contraseña de base de datos vacía. En una instalación nueva crea `sipe_grupo_5` o usa una base de ese nombre si está vacía. Si encuentra una base ocupada de procedencia desconocida, muestra un diagnóstico y conserva su contenido.
 
-El asistente valida el esquema, la conexión local y las protecciones de Apache. Crea una base propia, restaura los datos en una transacción y compara cada fila. La contraseña se genera para la instalación local y su hash sustituye la marca sin credencial de la exportación. Las credenciales SQL y las sesiones quedan fuera de `htdocs`, en la carpeta privada de la instalación. El acceso usa sesiones, permisos, tokens CSRF y auditoría.
+El instalador restaura `database/exportacion-academica.sql`, un respaldo lógico de la base activa `sipe_v2` obtenido en una transacción de solo lectura. Incluye **546 filas en 15 tablas**, una vista y las secuencias de identificadores. Los **123 archivos de fotografía** están incluidos como contenido binario dentro del respaldo y mantienen su vínculo con cada prestatario. El esquema ya incluye las migraciones del origen. Consulte el [informe de datos](documentacion/BASE-DE-DATOS.md).
 
-## Pruebas, ramas y versión
+SIPE prepara la cuenta de evaluación existente con `password_hash()` y verifica las filas, el esquema y las secuencias antes de marcar la instalación como lista. Los bloqueos de archivo y servidor coordinan accesos simultáneos. Las visitas posteriores comprueban el marcador y usan la configuración guardada fuera de `htdocs`.
 
-- **main** contiene la edición verificada de evaluación.
-- **desarrollo** reúne la incorporación, la portabilidad y la documentación.
-- **entrega/final** conserva el trabajo de armado y verificación del paquete.
-- **v1.0.0** identifica el código del ZIP publicado.
+## Instalaciones no estándar y errores
 
-Los commits documentan cambios realizados en el repositorio independiente. La [evidencia de pruebas](documentacion/PRUEBAS.md) describe los ensayos sobre bases separadas.
+- **MariaDB no responde.** Compruebe que MySQL esté iniciado, que el puerto y la cuenta sean correctos y que la cuenta pueda crear la base, tablas y vistas.
+- **Su conexión es distinta o la base está ocupada.** Antes del primer acceso correcto puede crear `config/config.local.php` con la configuración local. Los campos omitidos usan los valores estándar. Consulte el ejemplo en la [guía de instalación](documentacion/GUIA-DE-INSTALACION.md).
+- **Apache no protege una carpeta.** Compruebe que extrajo `.htaccess` y que Apache aplica `AllowOverride All` y tiene `mod_rewrite` activo.
+- **La preparación se interrumpió.** Inicie los servicios y vuelva a abrir la misma URL. Conserve la carpeta privada y la base para que SIPE compruebe su propiedad y reanude la preparación.
+- **La aplicación ya está instalada.** Reinicie los servicios y abra la misma URL. Una extracción en otra carpeta tiene configuración privada propia. Use una base independiente si desea conservar ambas instalaciones.
 
-## Solución de errores y reinicio
+## Pruebas y publicación
 
-- **El asistente dice que la base ya existe.** Indique otro nombre que comience por `sipe_grupo_5_`.
-- **La conexión SQL es rechazada.** Compruebe MySQL en XAMPP, puerto y credenciales. Use una cuenta SQL con autorización para crear la base, tablas y vistas y operar sobre sus datos.
-- **Apache informa que una carpeta interna no está protegida.** Use una instalación con `.htaccess`, `mod_rewrite` y `AllowOverride` habilitados. El asistente conserva su protección hasta que se cumpla ese requisito.
-- **Apache tiene otro puerto.** Inclúyalo al abrir la URL de localhost. Para cambiar el puerto SQL, use el campo del asistente.
-- **Detener o reiniciar.** Cierre sesión y detenga Apache y MySQL desde XAMPP. Para volver a usar SIPE, inicie los dos servicios y abra la misma URL. La base y la configuración local se conservan.
+La versión correctiva es `v1.0.1`. El ZIP se construye desde el commit publicado e incluye un manifiesto SHA-256 de sus archivos. El SHA-256 del ZIP se publica por separado en la [versión de GitHub](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.1).
 
-Los detalles están en la [guía de instalación](documentacion/GUIA-DE-INSTALACION.md).
+Consulte los resultados de instalación, reinicio, cotejo de datos, portabilidad, seguridad y reglas de negocio en [Pruebas de la entrega](documentacion/PRUEBAS.md).

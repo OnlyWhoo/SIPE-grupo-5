@@ -1,26 +1,25 @@
-# Pruebas de la entrega
+# Pruebas de SIPE Grupo 5 v1.0.1
 
-Ensayos del 19 de noviembre de 2026 con Apache 2.4.65, PHP 8.3.36 y MariaDB 10.11.16 de XAMPP. La entrega se extrajo en htdocs y el asistente se completó desde el navegador. Cada instalación de ensayo usó una base independiente.
+Ensayos del 19 de noviembre de 2026 en Windows con Apache 2.4.65, PHP 8.3.36 y MariaDB 10.11.16 de XAMPP. Las pruebas de escritura se ejecutaron sobre bases independientes de SIPE Grupo 5. El cotejo de SIPE V2 se ejecutó con una instantánea de solo lectura.
 
-| Ensayo | Comprobaciones correctas |
+| Prueba | Resultado |
+| --- | --- |
+| **A. Instalación limpia** | Una extracción bajo `htdocs`, con XAMPP en el puerto SQL 3306 y sin archivo de configuración local, creó `sipe_grupo_5`. Dos primeras visitas simultáneas llegaron al login. La cuenta de evaluación abrió el panel. |
+| **B. Segundo inicio** | Se recargó la aplicación, se cerró Edge y se reiniciaron procesos aislados de Apache y MariaDB de XAMPP. En una sesión nueva de Edge se abrió el login. El estado, identificador de instalación, hash de evaluación y conteos de fichas, reservas, préstamos, sanciones, fotografías y auditoría coincidieron antes y después del reinicio. |
+| **C. Conservación de datos** | La restauración coincidió fila a fila con el corte confirmado de la base activa `sipe_v2`. Se verificaron 546 filas en 15 tablas, la vista, claves foráneas, secuencias, 123 fotografías binarias y 124 QR. La cuenta ya existía y conserva su ID, correo y rol. Su hash es propio de la copia. Las tablas técnicas guardan la identidad de instalación independiente. |
+| **D. Portabilidad** | Se ensayó una extracción en el subdirectorio `Proyecto final 5`. Se verificaron las rutas CSS, JavaScript y logotipo, así como el login, el cierre de sesión, los enlaces de fichas, las fotografías, los QR y el vale servido por Apache. |
+| **E. Seguridad y errores** | Se rechazaron accesos a archivos internos, el POST del asistente anterior y peticiones con host u origen no autorizados. Una segunda extracción que apuntaba a una base ocupada recibió 503 y los datos quedaron intactos. Con MariaDB apagado o el SQL alterado se mostró un diagnóstico y se rechazó la instalación. Se probaron una base vacía preexistente, una cuenta sin CREATE y siete interrupciones recuperables. |
+| **F. Funcionalidad** | Se probaron identificación por código y QR, hoja de vida, inventario, autorizaciones, reservas, entregas, vales, devoluciones, inspecciones, cancelaciones, sanciones, reportes y auditoría. Se verificó que los estudiantes siguen limitados por su autorización, que docentes y administrativos reservan sin aprobación individual y que una sanción abierta bloquea nuevas operaciones de préstamo. |
+
+## Pruebas de desarrollo
+
+| Suite | Casos sin fallos |
 | --- | ---: |
-| PHP unitarias | 17 |
+| Unitarias | 17 |
 | Integración | 37 |
 | Flujos y reglas | 45 |
 | Bloqueo por sanciones | 24 |
-| Concurrencia | 5 |
-| Instalador | 12 |
-| HTTP y cotejo de datos desde el ZIP | 55 |
-| Comparación de capturas en Edge | 10 |
+| Concurrencia de operaciones | 5 |
+| Instalador y reanudación | 15 |
 
-## Qué se verificó
-
-- El instalador bloquea bases ajenas y reanuda interrupciones sin duplicar la siembra. Se probó una cuenta SQL sin permiso CREATE.
-- Las 546 filas de las 15 tablas de aplicación coincidieron entre el respaldo restaurado, la exportación SQL y la base instalada por el asistente, con el hash de acceso normalizado para comparar. Se cotejaron claves, estados, fotos binarias, asociaciones y QR.
-- La prueba HTTP cubrió login con contraseña creada localmente, protección de los archivos internos, búsqueda por código y QR, hoja de vida, reservas, horarios, faltas de autorización, docente y administrativo sin aprobación individual, entrega, devolución, inspección, cancelación, vales, sanciones y auditoría.
-- Edge comparó a nivel de píxel el inicio de sesión, el panel, los préstamos, la identificación, el bloqueo, la hoja de vida, sanciones, reportes, el vale y la vista móvil de bloqueo con una extracción aislada del código fuente. Las diez capturas coincidieron.
-- Los ensayos de concurrencia verificaron reserva y entrega simultáneas, así como el orden entre una sanción abierta y una operación de préstamo.
-
-## Reproducción para desarrollo
-
-Los scripts PHP de la carpeta tests ejecutan los casos unitarios, de integración, de flujo, de sanciones, concurrencia y del instalador. Ejecute integration.php antes de workflow.php, sanction-block.php y concurrency.php, en ese orden, con su MariaDB de XAMPP. Los scripts crean bases de ensayo. Use tests/verificar-copia.php para comparar una restauración recién creada y tests/entrega-web.py para probar una extracción limpia. Estas herramientas pertenecen al repositorio de desarrollo. La evaluación se realiza desde el ZIP y el navegador.
+Desde el repositorio de desarrollo, ejecute con PHP de XAMPP los archivos en `tests/`. Ejecute `integration.php` antes de `workflow.php`, `sanction-block.php` y `concurrency.php`, en ese orden. Para una extracción nueva de ensayo en XAMPP, `tests/entrega-web.py` prueba las rutas HTTP y llama a `tests/verificar-copia.php` para cotejar la restauración antes de que el login añada eventos a auditoría.

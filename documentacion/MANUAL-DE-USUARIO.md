@@ -2,7 +2,7 @@
 
 ## Ingreso y directorio
 
-Ingrese con la cuenta de evaluación configurada en el asistente. El **Panel principal** ofrece accesos a Solicitud de Recursos y Hoja de Vida. Busque por código institucional o QR. El lector externo puede introducir el token como texto. La cámara requiere compatibilidad y permiso del navegador.
+Ingrese con la cuenta de evaluación indicada en LEEME-PRIMERO.txt. El **Panel principal** ofrece accesos a Solicitud de Recursos y Hoja de Vida. Busque por código institucional o QR. El lector externo puede introducir el token como texto. La cámara requiere compatibilidad y permiso del navegador.
 
 La hoja de vida reúne identificación, datos académicos, vigencia, fotografía, QR, categorías autorizadas e historial. El administrador puede gestionar fichas y fotos en **Usuarios de préstamos**, y cuentas del personal en **Usuarios**.
 

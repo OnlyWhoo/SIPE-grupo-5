@@ -1,20 +1,34 @@
 # Guía de instalación con XAMPP
 
-## Primera visita
+## Instalación estándar
 
-1. Descargue el ZIP de la [versión académica](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.0). Puede comparar su SHA-256 con el publicado en Releases.
-2. Extraiga el ZIP directamente en `htdocs` de XAMPP. Abra `http://localhost/SIPE-grupo-5/` después de iniciar Apache y MySQL.
-3. El asistente muestra la conexión local. Use el puerto SQL de su XAMPP y las credenciales de una cuenta autorizada. En una instalación con el puerto habitual, use `3306`.
-4. Elija una base nueva `sipe_grupo_5` o con un sufijo. El instalador comprueba su propiedad antes de reanudar una instalación interrumpida.
-5. Seleccione una contraseña de evaluación de entre 15 caracteres y 72 bytes y pulse **Preparar y continuar**. El proceso valida la configuración, crea la base, verifica el esquema y restaura los datos.
-6. Ingrese con `profesor@sipe.local` y la contraseña que eligió en el paso anterior.
+1. Descargue [SIPE-GRUPO-5-ENTREGA-FINAL.zip](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/download/v1.0.1/SIPE-GRUPO-5-ENTREGA-FINAL.zip).
+2. Extraiga la carpeta `SIPE-grupo-5` en `htdocs`.
+3. Inicie Apache y MySQL desde el panel de XAMPP.
+4. Abra `http://localhost/SIPE-grupo-5/`. En el primer acceso, espere a que SIPE termine de preparar la base y abra el login.
+5. Ingrese con `profesor@sipe.local` y `Sipe2026!`. Esta cuenta es exclusivamente para evaluación académica local.
 
-## Permisos y reanudación
+La URL sigue el nombre de la carpeta extraída. Si Apache usa otro puerto, inclúyalo en la URL del navegador.
 
-La cuenta SQL autorizada necesita crear la base nueva, tablas y vistas, consultar el esquema en `information_schema` y ejecutar las operaciones de SIPE. Si la cuenta carece de permiso de creación, el asistente solicita una cuenta autorizada. Puede usar un sufijo diferente cuando el nombre está ocupado.
+## Configuración local opcional
 
-Para reanudar una primera instalación interrumpida, use el mismo nombre, conexión y contraseña de evaluación. La configuración vive fuera de `htdocs` bajo `sipe-grupo-5-private`. Cada directorio instalado tiene su propia carpeta privada identificada por la ruta. Si cambia de carpeta o necesita reinstalar, elija una base nueva para la nueva instalación.
+Para un XAMPP con parámetros diferentes, cree `config/config.local.php` dentro de la carpeta extraída antes de iniciar. El archivo devuelve un arreglo PHP. Este ejemplo usa un nombre de base independiente y muestra los demás valores estándar. Puede omitir las entradas que utilicen dichos valores.
 
-## Cuando el sistema ya está instalado
+```php
+<?php
+return [
+    'host' => '127.0.0.1',
+    'port' => 3306,
+    'database' => 'sipe_grupo_5_evaluacion',
+    'user' => 'root',
+    'password' => '',
+];
+```
 
-Cierre sesión antes de detener Apache o MySQL desde XAMPP. Para reiniciar, vuelva a iniciar los servicios y abra la misma URL. Para cuestiones de protección de directorios o extensiones de PHP, consulte la sección de solución de errores del [README](../README.md).
+Use `sipe_grupo_5` o un nombre que empiece por `sipe_grupo_5_` con sufijos alfanuméricos en minúsculas separados por guiones bajos. La cuenta MariaDB necesita permisos para crear la base, las tablas y la vista, consultar sus metadatos y operar sobre sus datos. Mantenga las credenciales reales en el equipo local. Apache protege la carpeta `config/` y Git ignora el archivo opcional.
+
+## Reanudación y visitas posteriores
+
+La configuración y las sesiones se guardan en `sipe-grupo-5-private`, junto a `htdocs`, en un subdirectorio por ruta de instalación. Reinicie Apache y MySQL y vuelva a abrir la misma URL. El marcador permite reanudar la preparación interrumpida de la misma extracción y conservar los cambios de una instalación lista. Para probar otra extracción en el mismo XAMPP, use un nombre de base independiente en su configuración opcional. Una instalación anterior conserva la cuenta y contraseña con las que se preparó.
+
+Si aparece un diagnóstico de Apache o MariaDB, consulte [README](../README.md) para las comprobaciones básicas.

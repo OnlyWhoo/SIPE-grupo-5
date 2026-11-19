@@ -1,9 +1,11 @@
-"""Construye el ZIP de evaluación a partir de los archivos versionados."""
+"""Construye el ZIP de evaluación a partir del commit HEAD."""
 
 import argparse
 from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
 import subprocess
+from tarfile import open as open_tar
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 
@@ -24,6 +26,15 @@ REQUERIDOS = {
 }
 
 
+def incluir(nombre):
+    ruta = Path(nombre)
+    if nombre in ARCHIVOS:
+        return True
+    return (ruta.parts[0] in CARPETAS
+            and not any(p.startswith(".") for p in ruta.parts)
+            and not ruta.name.endswith((".local.php", ".log", ".tmp", ".bak", ".zip", "~")))
+
+
 def entrada(nombre):
     archivo = ZipInfo(RAIZ + nombre, (1980, 1, 1, 0, 0, 0))
     archivo.compress_type = ZIP_DEFLATED
@@ -39,19 +50,20 @@ def main():
     args.salida.mkdir(parents=True, exist_ok=True)
     resultado = args.salida / NOMBRE
     temporal = resultado.with_suffix(".tmp")
-    versionados = subprocess.check_output(["git", "ls-files", "-z"], cwd=base).decode("utf-8")
-    seleccion = {archivo for archivo in versionados.split("\0") if archivo in ARCHIVOS
-                 or archivo.split("/", 1)[0] in CARPETAS}
-    if faltan := (ARCHIVOS | REQUERIDOS) - seleccion:
-        raise SystemExit("Faltan archivos versionados en el paquete: " + ", ".join(sorted(faltan)))
+    versionados = subprocess.check_output(["git", "archive", "--format=tar", "HEAD"], cwd=base)
     manifiesto = {}
     try:
-        with ZipFile(temporal, "w", compression=ZIP_DEFLATED, compresslevel=9) as zip_file:
+        with open_tar(fileobj=BytesIO(versionados)) as repo, ZipFile(
+            temporal, "w", compression=ZIP_DEFLATED, compresslevel=9
+        ) as zip_file:
+            seleccion = {ruta.name: ruta for ruta in repo if not ruta.isdir() and incluir(ruta.name)}
+            if faltan := (ARCHIVOS | REQUERIDOS) - seleccion.keys():
+                raise SystemExit("Faltan archivos en el commit: " + ", ".join(sorted(faltan)))
             for nombre in sorted(seleccion):
-                ruta = base / nombre
-                if ruta.is_symlink() or ruta.resolve().is_relative_to(base) is False:
-                    raise ValueError("Ruta fuera del proyecto: " + nombre)
-                contenido = ruta.read_bytes()
+                if not seleccion[nombre].isfile():
+                    raise ValueError("El paquete requiere un archivo regular: " + nombre)
+                with repo.extractfile(seleccion[nombre]) as archivo:
+                    contenido = archivo.read()
                 manifiesto[nombre] = sha256(contenido).hexdigest()
                 zip_file.writestr(entrada(nombre), contenido, compresslevel=9)
             texto = "".join(f"{digest}  {nombre}\n" for nombre, digest in manifiesto.items())

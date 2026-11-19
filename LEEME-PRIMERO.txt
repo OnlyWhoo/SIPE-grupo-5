@@ -1,17 +1,18 @@
-SIPE GRUPO 5 — GUÍA RÁPIDA PARA EL PROFESOR
+SIPE GRUPO 5 — INSTALACIÓN RÁPIDA
 
-1. Descargue SIPE-GRUPO-5-ENTREGA-FINAL.zip desde
-   https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.0
-2. Extráigalo dentro de C:\xampp\htdocs. Debe quedar
-   C:\xampp\htdocs\SIPE-grupo-5\index.php.
-3. Inicie Apache y MySQL en el panel de XAMPP.
-4. Abra http://localhost/SIPE-grupo-5/.
-5. Complete el asistente con la conexión SQL autorizada y el nombre
-   de una base nueva, por ejemplo sipe_grupo_5.
-6. Elija una contraseña de evaluación de al menos 15 caracteres.
-   Inicie sesión con profesor@sipe.local y la contraseña que eligió.
-7. Abra Solicitud de Recursos o consulte el manual en documentacion.
+1. Descargue SIPE-GRUPO-5-ENTREGA-FINAL.zip de
+   https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.1
+2. Descomprima la carpeta SIPE-grupo-5 dentro de htdocs de XAMPP.
+   En una instalación habitual quedará C:\xampp\htdocs\SIPE-grupo-5\index.php.
+3. Abra el panel de XAMPP.
+4. Inicie Apache y MySQL.
+5. Abra http://localhost/SIPE-grupo-5/ en el navegador.
+6. En el inicio de sesión, use profesor@sipe.local y Sipe2026!.
 
-La contraseña MySQL es la de su instalación de XAMPP. La contraseña
-de evaluación se configura en el asistente. Puede detener y volver a
-iniciar Apache y MySQL desde XAMPP para continuar con la misma base.
+SIPE prepara su base automáticamente en el primer acceso con XAMPP
+estándar. Las credenciales son exclusivamente para evaluación académica local.
+Al reiniciar XAMPP, abra la misma URL para continuar con sus datos.
+
+Si aparece un diagnóstico, compruebe que MySQL esté iniciado y que el
+puerto y la cuenta de XAMPP sean correctos. Consulte README.md y la
+guía en documentacion para conexiones no estándar o una base ocupada.

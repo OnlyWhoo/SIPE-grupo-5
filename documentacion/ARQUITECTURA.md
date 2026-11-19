@@ -6,8 +6,8 @@ La entrada `index.php` delega en `public/index.php`. `app/runtime.php` inicia co
 
 ## Instalación y datos
 
-`app/setup.php` presenta el asistente de conexión y contraseña. `Installer` crea y verifica las tablas y la vista a partir de `database/entrega-plan.json`. `DatosAcademicos` carga `database/datos-academicos.json` con claves foráneas activas, reconstruye las fotografías binarias e instala una clave nueva para la cuenta de evaluación. Antes de cerrar la transacción, compara las filas restauradas con el conjunto distribuido.
+En la primera navegación local, `app/runtime.php` llama a `app/setup.php` para cargar la conexión estándar u opcional. `Installer` coordina las peticiones mediante un bloqueo de archivo para la extracción y `GET_LOCK` para el nombre de la base. Valida la propiedad de la base y registra los pasos de esquema. Al completar la configuración, redirige a la ruta de login existente.
 
-`database/source/` conserva el esquema y las migraciones de procedencia. `database/exportacion-academica.sql` contiene DDL y datos para revisión técnica. El instalador web usa la representación JSON y aplica sus verificaciones de propiedad y esquema. Las tablas de propiedad de instalación registran el estado local y se crean en el equipo del profesor.
+`database/exportacion-academica.sql` incorpora las migraciones de origen. El instalador crea las tablas y la vista con las definiciones verificadas por `entrega-plan.json`, importa las sentencias de datos del respaldo en una transacción y compara las filas y secuencias con el corte en `datos-academicos.json`. Antes de confirmar, prepara el hash de la cuenta de evaluación y marca la base como lista. `database/source/` conserva el esquema y las migraciones de procedencia para revisión.
 
-El servidor admite acceso local. Apache protege las carpetas internas. Las credenciales y sesiones locales se guardan fuera de `htdocs`. Las rutas internas se derivan de la carpeta de entrada. El directorio técnico `vendor`, los nombres SQL y los namespaces se conservan como dependencias de la aplicación.
+El acceso web se limita a localhost. Apache protege archivos y carpetas internas. La configuración de la instalación y las sesiones se guardan fuera de `htdocs`. Los enlaces, formularios, redirecciones y recursos estáticos toman la ruta base del script de entrada.
