@@ -26,12 +26,16 @@ final class Local
         $port=(int)($_SERVER['SERVER_PORT']??0);
         if($port<1 || $port>65535){throw new RuntimeException('No se pudo identificar el puerto Apache.');}
         $scheme=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http';
-        $path=implode('/',array_map('rawurlencode',explode('/',trim($base,'/'))));
-        foreach(['app','config','database','var','vendor','docs','documentacion','public'] as $directory){
-            $url=$scheme.'://127.0.0.1:'.$port.($path!==''?'/'.$path:'').'/'.$directory.'/protection-check.txt';
-            $context=stream_context_create(['http'=>['method'=>'GET','ignore_errors'=>true,'follow_location'=>0,'timeout'=>2,'header'=>"Connection: close\r\n"],'ssl'=>['verify_peer'=>true,'verify_peer_name'=>true]]);
+        $loopback=$_SERVER['REMOTE_ADDR']==='::1'?'[::1]':'127.0.0.1';
+        $host=$_SERVER['HTTP_HOST'];
+        $paths=['app/protection-check.txt','config/example.php','database/exportacion-academica.sql',
+            'var/protection-check.txt','vendor/autoload.php','docs/protection-check.txt',
+            'documentacion/protection-check.txt','public/protection-check.txt'];
+        foreach($paths as $path){
+            $url=$scheme.'://'.$loopback.':'.$port.$base.'/'.$path;
+            $context=stream_context_create(['http'=>['method'=>'HEAD','ignore_errors'=>true,'follow_location'=>0,'timeout'=>2,'header'=>"Host: $host\r\nConnection: close\r\n"],'ssl'=>['verify_peer'=>true,'verify_peer_name'=>true]]);
             $http_response_header=[];@file_get_contents($url,false,$context);
-            if(!preg_match('/\AHTTP\/\S+ 403\b/',$http_response_header[0]??'')){throw new RuntimeException('Apache no protege '.$directory.'. Habilita mod_rewrite y AllowOverride All para esta carpeta. La instalación está bloqueada.');}
+            if(!preg_match('/\AHTTP\/\S+ 403\b/',$http_response_header[0]??'')){throw new RuntimeException('Apache no protege '.dirname($path).'. Habilita mod_rewrite y AllowOverride All para esta carpeta. La instalación está bloqueada.');}
         }
     }
     public static function privateDirectory(): string {
@@ -39,7 +43,7 @@ final class Local
         if($document===false){throw new RuntimeException('No se pudo resolver htdocs.');}
         $base=dirname($document).'/sipe-grupo-5-private';
         $directory=$base.'/'.hash('sha256',strtolower(str_replace('\\','/',ROOT)));
-        if(!is_dir($directory)&&!@mkdir($directory,0700,true)){throw new RuntimeException('Apache necesita escritura en la carpeta sipe-grupo-5-private situada junto a htdocs.');}
+        if(!is_dir($directory)&&!@mkdir($directory,0700,true)&&!is_dir($directory)){throw new RuntimeException('Apache necesita escritura en la carpeta sipe-grupo-5-private situada junto a htdocs.');}
         $resolved=strtolower(str_replace('\\','/',(string)realpath($directory))).'/';
         foreach([$document,ROOT] as $public){$prefix=strtolower(str_replace('\\','/',(string)realpath($public))).'/';if(str_starts_with($resolved,$prefix)){throw new RuntimeException('La carpeta privada debe estar fuera de htdocs.');}}
         return $directory;

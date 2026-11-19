@@ -2,6 +2,7 @@
 
 import argparse
 import base64
+from concurrent.futures import ThreadPoolExecutor
 import subprocess
 from datetime import datetime, timedelta, timezone
 import html
@@ -9,9 +10,8 @@ from http.cookiejar import CookieJar
 import json
 from pathlib import Path
 import re
-import secrets
 from urllib.error import HTTPError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin, urlsplit
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
 
@@ -19,9 +19,9 @@ def client():
     return build_opener(HTTPCookieProcessor(CookieJar()))
 
 
-def request(browser, url, fields=None, raw=None, content_type=None):
-    body = urlencode(fields).encode() if fields is not None else raw
-    headers = {"Content-Type": content_type} if content_type else {}
+def request(browser, url, fields=None, headers=None):
+    body = urlencode(fields).encode() if fields is not None else None
+    headers = headers or {}
     try:
         response = browser.open(Request(url, body, headers), timeout=25)
     except HTTPError as error:
@@ -51,10 +51,11 @@ def main():
     parser.add_argument("php", type=Path)
     args = parser.parse_args()
     base = args.url.rstrip("/") + "/"
-    if not re.fullmatch(r"http://127\.0\.0\.1/(?:_sipe-grupo5-qa-[a-z0-9]+/)?SIPE-grupo-5/", base):
-        raise SystemExit("Usa una extracción de prueba de SIPE-grupo-5 en localhost.")
-    if not re.fullmatch(r"sipe_grupo_5_qa_[a-z0-9]+", args.base_datos):
-        raise SystemExit("Usa una base de prueba nueva sipe_grupo_5_qa_*.")
+    url = urlsplit(base)
+    if url.scheme != "http" or url.hostname != "127.0.0.1" or not url.path.startswith("/_sipe-grupo5-qa-"):
+        raise SystemExit("Usa una extracción de prueba en /_sipe-grupo5-qa-* de 127.0.0.1.")
+    if not re.fullmatch(r"sipe_grupo_5(?:_qa_[a-z0-9]+)?", args.base_datos):
+        raise SystemExit("Usa una base aislada sipe_grupo_5 o sipe_grupo_5_qa_*.")
     root = Path(__file__).resolve().parents[1]
     snapshot = json.loads((root/"database/datos-academicos.json").read_text(encoding="utf-8"))
     def rows(name):
@@ -67,28 +68,30 @@ def main():
     def post(route, fields, **params):
         return request(http, base+"index.php?"+urlencode({"r":route,**params}), {"csrf":token,**fields})
 
-    setup = request(http, base)
-    check(setup[0]==200 and "Preparar SIPE Grupo 5" in text(setup), "asistente en la ruta de la nueva carpeta")
-    for path in ("database/datos-academicos.json","database/exportacion-academica.sql",
-                 "documentacion/protection-check.txt","vendor/autoload.php","config/example.php"):
+    denied = request(http, base, {"database": "sipe_v2", "admin_password": "no aplicable"})
+    check(denied[0] == 405, "POST del asistente anterior no inicia la instalación")
+    check(request(http, base, headers={"Host": "proxy.example"})[0] == 403, "Host que no es localhost rechazado")
+    check(request(http, base, headers={"Sec-Fetch-Site": "cross-site"})[0] == 403, "navegación cruzada rechazada")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        visits = list(pool.map(lambda _: request(client(), base), range(2)))
+    check(all(r[0] == 200 and r[1] == base+"index.php?r=login" and "Preparar SIPE Grupo 5" not in text(r)
+              for r in visits), "dos primeras peticiones llegan al login sin asistente")
+    for path in ("app/setup.php","database/datos-academicos.json","database/exportacion-academica.sql",
+                 "documentacion/protection-check.txt","vendor/autoload.php","config/example.php",
+                 "config/config.local.php",".git/config"):
         check(request(http,base+path)[0]==403, "Apache protege "+path)
-    password = secrets.token_urlsafe(24)
-    correo = snapshot["administrador"]["correo"]
-    token = csrf(setup[3])
-    params = {"host":"127.0.0.1","port":"3306","database":args.base_datos,"user":"root",
-              "password":"","admin_password":password}
-    denied = request(http, base, params)
-    check(denied[0]==403, "asistente exige CSRF")
-    forbidden = request(http, base, params | {"csrf":token,"database":"sipe_v2"})
-    check("Elige sipe_grupo_5" in text(forbidden), "el asistente rechaza la base original de SIPE V2")
-    login = request(http, base, params | {"csrf":token})
-    check(login[0]==200 and "r=login" in login[1], "asistente restaura la base y abre el inicio de sesión")
     subprocess.run([str(args.php),str(root/"tests/verificar-copia.php"),args.base_datos],check=True)
+    login = request(http, base)
+    for path, mime in (("assets/css/style.css","text/css"),("assets/js/app.js","javascript"),("assets/img/logo.png","image/png")):
+        asset = urljoin(login[1], path)
+        check(urlsplit(asset).path in text(login), "el login usa la ruta portable de "+path)
+        response = request(http, asset)
+        check(response[0] == 200 and mime in response[2]["Content-Type"], "Apache entrega "+path)
     check("r=login" in get("photo",id=1)[1] and "r=login" in get("qr",id=1)[1],
           "foto y QR requieren sesión")
     token = csrf(login[3])
-    dashboard = post("login", {"correo":correo,"password":password})
-    check(dashboard[0]==200 and "r=dashboard" in dashboard[1], "inicio de sesión con la nueva contraseña de evaluación")
+    dashboard = post("login", {"correo":"profesor@sipe.local","password":"Sipe2026!"})
+    check(dashboard[0]==200 and dashboard[1] == base+"index.php?r=dashboard", "inicio de sesión con las credenciales de evaluación")
     token = csrf(dashboard[3])
 
     blocked_ids={row["estudiante_id"] for row in rows("sanciones") if row["estado"]=="ABIERTA"}
@@ -159,14 +162,14 @@ def main():
                         "time":now.strftime("%H:%M"),"fin":(now+timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M")}
     check("Reserva confirmada" in text(post("confirm",loan_payload)),
           "administrativo reserva otra categoría sin aprobación")
-    last_r=max(int(r["id"]) for r in rows("reservas"))
-    last_l=max(int(r["id"]) for r in rows("prestamos"))
-    check("La reserva quedó atendida" in text(post("deliver",{"id":last_r+3,"estado_fisico":"BUENO"})),
+    first_r = int(snapshot["secuencias"]["reservas"])
+    first_l = int(snapshot["secuencias"]["prestamos"])
+    check("La reserva quedó atendida" in text(post("deliver",{"id":first_r+2,"estado_fisico":"BUENO"})),
           "entrega física de la reserva administrativa")
-    check("Vale de préstamo externo" in text(get("voucher",id=last_l+1)),"vale de préstamo externo")
+    check("Vale de préstamo externo" in text(get("voucher",id=first_l)),"vale de préstamo externo")
     check("Devolución registrada" in text(post("return-loan",{
-          "id":last_l+1,"estado_fisico":"BUENO","apto":"1"})),"devolución e inspección")
-    check("Solicitud cancelada" in text(post("requests",{"id":last_r+2,"action":"cancel"})),"cancelación con historial")
+          "id":first_l,"estado_fisico":"BUENO","apto":"1"})),"devolución e inspección")
+    check("Solicitud cancelada" in text(post("requests",{"id":first_r+1,"action":"cancel"})),"cancelación con historial")
     check("Historial por prestatario" in text(get("reports",report="historial",identity=admin["codigo_estudiante"])),
           "reporte por prestatario")
     check("DEVOLVER" in text(get("audit")),"auditoría registra la devolución")

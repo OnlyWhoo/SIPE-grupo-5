@@ -56,6 +56,7 @@ final class DatosAcademicos
     {
         $datos = Entrega::read($carpeta.'/datos-academicos.json');
         if (($datos['version'] ?? null) !== 1 || !is_array($datos['tablas'] ?? null)
+            || !is_array($datos['secuencias'] ?? null)
             || !is_array($datos['administrador'] ?? null)
             || !is_string($datos['administrador']['correo'] ?? null)
             || !is_string($datos['administrador']['id'] ?? null)) {
@@ -64,54 +65,99 @@ final class DatosAcademicos
         return $datos;
     }
 
-    public static function restaurar(PDO $db, array $plan, array $datos, array $admin): void
+    public static function secuencias(PDO $db, string $base): array
     {
-        $tablas = $datos['tablas'];
-        $cuenta = $datos['administrador'];
-        if (array_keys($tablas) !== array_keys($plan['tables']) || $admin['correo'] !== $cuenta['correo']) {
-            throw new RuntimeException('Los datos académicos o su cuenta inicial no corresponden a la edición.');
+        $consulta = $db->prepare('SELECT TABLE_NAME, AUTO_INCREMENT FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA=? AND AUTO_INCREMENT IS NOT NULL ORDER BY TABLE_NAME');
+        $consulta->execute([$base]);
+        return array_map('strval', $consulta->fetchAll(PDO::FETCH_KEY_PAIR));
+    }
+
+    public static function ddl(string $nombre, array $tabla, array $datos): string
+    {
+        $secuencia = $datos['secuencias'][$nombre] ?? null;
+        if ($secuencia === null) {
+            return $tabla['sql'];
         }
+        if (!is_string($secuencia) || !preg_match('/\A[1-9][0-9]{0,19}\z/D', $secuencia)) {
+            throw new RuntimeException('Secuencia inválida para '.$nombre.'.');
+        }
+        return $tabla['sql'].' AUTO_INCREMENT='.$secuencia;
+    }
+
+    public static function sql(array $plan, array $datos): string
+    {
+        if (array_keys($plan['tables']) !== array_keys($datos['tablas'])) {
+            throw new RuntimeException('Las tablas del respaldo no coinciden con el esquema.');
+        }
+        $sql = "-- SIPE Grupo 5: respaldo de las tablas y la vista de aplicación de SIPE V2.\nSET NAMES utf8mb4;\n";
+        foreach ($plan['tables'] as $nombre => $tabla) {
+            $sql .= self::ddl($nombre, $tabla, $datos).";\n\n";
+        }
+        $sql .= $plan['view']['sql'].";\n\nSTART TRANSACTION;\n";
         foreach ($plan['tables'] as $nombre => $tabla) {
             $columnas = self::columnas($tabla);
-            if (($tablas[$nombre]['columnas'] ?? null) !== $columnas || !is_array($tablas[$nombre]['filas'] ?? null)) {
-                throw new RuntimeException('El conjunto académico no coincide con la tabla '.$nombre.'.');
+            if ($datos['tablas'][$nombre]['columnas'] !== $columnas) {
+                throw new RuntimeException('Las columnas del respaldo no coinciden en '.$nombre.'.');
             }
             $campos = implode(',', array_map(self::identificar(...), $columnas));
-            $argumentos = implode(',', array_fill(0, count($columnas), '?'));
-            $insertar = $db->prepare('INSERT INTO '.self::identificar($nombre)." ($campos) VALUES ($argumentos)");
-            $indices = array_flip($columnas);
-            foreach ($tablas[$nombre]['filas'] as $fila) {
+            $prefijo = 'INSERT INTO '.self::identificar($nombre)." ($campos) VALUES (";
+            foreach ($datos['tablas'][$nombre]['filas'] as $fila) {
                 if (!is_array($fila) || !array_is_list($fila) || count($fila) !== count($columnas)) {
                     throw new RuntimeException('Una fila académica tiene columnas inesperadas.');
                 }
-                if ($nombre === 'usuarios') {
-                    if ($fila[$indices['password_hash']] !== self::MARCA_SIN_CLAVE) {
+                $literales = [];
+                foreach ($fila as $i => $valor) {
+                    $columna = $columnas[$i];
+                    if ($nombre === 'usuarios' && $columna === 'password_hash' && $valor !== self::MARCA_SIN_CLAVE) {
                         throw new RuntimeException('La exportación no admite contraseñas de origen.');
                     }
-                    if ($fila[$indices['id']] === $cuenta['id'] && $fila[$indices['correo']] === $cuenta['correo']) {
-                        $fila[$indices['password_hash']] = $admin['hash'];
+                    if ($nombre === 'fotografias_prestatarios' && $columna === 'contenido') {
+                        $foto = base64_decode($valor, true);
+                        if ($foto === false || (@getimagesizefromstring($foto)['mime'] ?? null) !== $fila[array_search('mime', $columnas, true)]) {
+                            throw new RuntimeException('Una fotografía académica no es válida.');
+                        }
+                        $literales[] = "X'".bin2hex($foto)."'";
+                    } else {
+                        $literales[] = $valor === null ? 'NULL' : "CONVERT(X'".bin2hex($valor)."' USING utf8mb4)";
                     }
-                } elseif ($nombre === 'fotografias_prestatarios') {
-                    $foto = base64_decode($fila[$indices['contenido']], true);
-                    if ($foto === false || (@getimagesizefromstring($foto)['mime'] ?? null) !== $fila[$indices['mime']]) {
-                        throw new RuntimeException('Una fotografía académica no es válida.');
-                    }
-                    $fila[$indices['contenido']] = $foto;
                 }
-                foreach ($fila as $indice => $valor) {
-                    $tipo = $valor === null ? PDO::PARAM_NULL : PDO::PARAM_STR;
-                    if ($nombre === 'fotografias_prestatarios' && $indice === $indices['contenido']) {
-                        $tipo = PDO::PARAM_LOB;
-                    }
-                    $insertar->bindValue($indice + 1, $valor, $tipo);
-                }
-                $insertar->execute();
+                $sql .= $prefijo.implode(',', $literales).");\n";
             }
         }
-        $verificar = $db->prepare("SELECT u.password_hash FROM usuarios u JOIN roles r ON r.id=u.rol_id
+        return $sql."COMMIT;\n";
+    }
+
+    public static function respaldo(string $carpeta, array $plan, array $datos): array
+    {
+        $archivo = $carpeta.'/exportacion-academica.sql';
+        $sql = is_file($archivo) ? file_get_contents($archivo) : false;
+        if ($sql === false) {
+            throw new RuntimeException('Falta el respaldo SQL. Extrae nuevamente el ZIP de SIPE Grupo 5.');
+        }
+        $sql = str_replace("\r\n", "\n", $sql);
+        // Solo se aceptan las sentencias del corte verificado, nunca SQL proporcionado por HTTP.
+        if ($sql !== self::sql($plan, $datos)) {
+            throw new RuntimeException('El respaldo SQL no coincide con el corte académico. Extrae nuevamente el ZIP.');
+        }
+        [, $filas] = explode("\nSTART TRANSACTION;\n", $sql, 2);
+        return [hash('sha256', $sql), explode("\n", substr($filas, 0, -strlen("\nCOMMIT;\n")))];
+    }
+
+    public static function restaurar(PDO $db, array $plan, array $datos, array $sentencias, array $admin): void
+    {
+        $cuenta = $datos['administrador'];
+        if ($admin['correo'] !== $cuenta['correo']) {
+            throw new RuntimeException('La cuenta de evaluación no coincide con el respaldo.');
+        }
+        foreach ($sentencias as $sentencia) {
+            $db->exec($sentencia);
+        }
+        $cuentaActiva = $db->prepare("UPDATE usuarios u JOIN roles r ON r.id=u.rol_id
+            SET u.password_hash=?, u.actualizado_en=u.actualizado_en
             WHERE u.id=? AND u.correo=? AND u.activo=1 AND r.nombre='ADMINISTRADOR'");
-        $verificar->execute([$cuenta['id'], $cuenta['correo']]);
-        if ($verificar->fetchColumn() !== $admin['hash'] || self::capturar($db, $plan) !== $tablas) {
+        $cuentaActiva->execute([$admin['hash'], $cuenta['id'], $cuenta['correo']]);
+        if ($cuentaActiva->rowCount() !== 1 || self::capturar($db, $plan) !== $datos['tablas']) {
             throw new RuntimeException('La restauración no coincide con los datos académicos.');
         }
     }

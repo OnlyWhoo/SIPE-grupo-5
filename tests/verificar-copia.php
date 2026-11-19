@@ -24,6 +24,9 @@ if (str_starts_with($nombre,'sipe_grupo_5_sql_')) {
     Schema::verify($db, $nombre, $plan);
 }
 $restauradas = DatosAcademicos::capturar($db, $plan);
+if (DatosAcademicos::secuencias($db, $nombre) !== $datos['secuencias']) {
+    throw new RuntimeException('Diferencia en las secuencias de identificadores.');
+}
 $total = 0;
 foreach ($datos['tablas'] as $nombre=>$origen) {
     if ($origen !== $restauradas[$nombre]) {

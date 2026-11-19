@@ -1,13 +1,12 @@
+-- SIPE Grupo 5: respaldo de las tablas y la vista de aplicación de SIPE V2.
 SET NAMES utf8mb4;
--- SIPE V2: esquema consolidado, migraciones 001 a 003 integradas.
--- Referencia t?cnica. La instalaci?n web usa entrega-plan.json.
 CREATE TABLE `roles` (
   `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(40) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=3;
 
 CREATE TABLE `usuarios` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -24,7 +23,7 @@ CREATE TABLE `usuarios` (
   KEY `rol_id` (`rol_id`),
   CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id`),
   CONSTRAINT `usuarios_check_1` CHECK (`activo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=2;
 
 CREATE TABLE `programas_academicos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -36,7 +35,7 @@ CREATE TABLE `programas_academicos` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `codigo` (`codigo`),
   CONSTRAINT `programas_academicos_check_1` CHECK (`activo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=10;
 
 CREATE TABLE `estudiantes` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -63,7 +62,7 @@ CREATE TABLE `estudiantes` (
   KEY `programa_id` (`programa_id`),
   CONSTRAINT `estudiantes_ibfk_1` FOREIGN KEY (`programa_id`) REFERENCES `programas_academicos` (`id`),
   CONSTRAINT `estudiantes_check_1` CHECK (`activo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=129;
 
 CREATE TABLE `categorias_recursos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -74,7 +73,7 @@ CREATE TABLE `categorias_recursos` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`),
   CONSTRAINT `categorias_recursos_check_1` CHECK (`activo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=44;
 
 CREATE TABLE `recursos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -93,7 +92,7 @@ CREATE TABLE `recursos` (
   KEY `idx_recursos_estado` (`estado_operativo`,`activo`),
   CONSTRAINT `recursos_ibfk_1` FOREIGN KEY (`categoria_id`) REFERENCES `categorias_recursos` (`id`),
   CONSTRAINT `recursos_check_1` CHECK (`activo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=156;
 
 CREATE TABLE `autorizaciones_programa_categoria` (
   `programa_id` bigint(20) unsigned NOT NULL,
@@ -133,7 +132,7 @@ CREATE TABLE `reservas` (
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`recurso_id`) REFERENCES `recursos` (`id`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`creada_por`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `reservas_check_1` CHECK (`fin` > `inicio`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=5;
 
 CREATE TABLE `prestamos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -160,7 +159,7 @@ CREATE TABLE `prestamos` (
   CONSTRAINT `prestamos_ibfk_3` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`),
   CONSTRAINT `prestamos_ibfk_4` FOREIGN KEY (`entregado_por`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `prestamos_check_1` CHECK (`fecha_limite` > `fecha_entrega`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=7;
 
 CREATE TABLE `devoluciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -174,7 +173,7 @@ CREATE TABLE `devoluciones` (
   KEY `recibido_por` (`recibido_por`),
   CONSTRAINT `devoluciones_ibfk_1` FOREIGN KEY (`prestamo_id`) REFERENCES `prestamos` (`id`),
   CONSTRAINT `devoluciones_ibfk_2` FOREIGN KEY (`recibido_por`) REFERENCES `usuarios` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=3;
 
 CREATE TABLE `inspecciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -194,7 +193,7 @@ CREATE TABLE `inspecciones` (
   CONSTRAINT `inspecciones_ibfk_2` FOREIGN KEY (`prestamo_id`) REFERENCES `prestamos` (`id`),
   CONSTRAINT `inspecciones_ibfk_3` FOREIGN KEY (`inspeccionado_por`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `inspecciones_check_1` CHECK (`apto_para_prestamo` in (0,1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=9;
 
 CREATE TABLE `sanciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -216,7 +215,7 @@ CREATE TABLE `sanciones` (
   CONSTRAINT `sanciones_ibfk_2` FOREIGN KEY (`prestamo_id`) REFERENCES `prestamos` (`id`),
   CONSTRAINT `sanciones_ibfk_3` FOREIGN KEY (`registrada_por`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `sanciones_check_1` CHECK (`monto` is null or `monto` >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=3;
 
 CREATE TABLE `auditoria` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -235,7 +234,7 @@ CREATE TABLE `auditoria` (
   KEY `idx_auditoria_entidad` (`entidad`,`entidad_id`),
   KEY `idx_auditoria_acceso` (`accion`,`ip_origen`,`fecha_evento`),
   CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=84;
 
 CREATE TABLE `configuraciones` (
   `clave` varchar(100) NOT NULL,
