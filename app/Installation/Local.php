@@ -12,9 +12,9 @@ final class Local
         return (bool)preg_match('/\A(?:localhost|127\.0\.0\.1|\[::1\])(?::[0-9]{1,5})?\z/D',$host);
     }
     public static function guard(): void {
-        if(!self::allowed($_SERVER)){http_response_code(403);exit('Abre SIPE V2 directamente desde localhost.');}
+        if(!self::allowed($_SERVER)){http_response_code(403);exit('Abre SIPE Grupo 5 directamente desde localhost.');}
         $site=$_SERVER['HTTP_SEC_FETCH_SITE']??'none';
-        if(!in_array($site,['none','same-origin'],true)){http_response_code(403);exit('Abre SIPE V2 directamente desde localhost.');}
+        if(!in_array($site,['none','same-origin'],true)){http_response_code(403);exit('Abre SIPE Grupo 5 directamente desde localhost.');}
         $origin=$_SERVER['HTTP_ORIGIN']??null;
         if($origin!==null){
             $scheme=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http';
@@ -27,7 +27,7 @@ final class Local
         if($port<1 || $port>65535){throw new RuntimeException('No se pudo identificar el puerto Apache.');}
         $scheme=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http';
         $path=implode('/',array_map('rawurlencode',explode('/',trim($base,'/'))));
-        foreach(['app','config','database','var','vendor','docs','public'] as $directory){
+        foreach(['app','config','database','var','vendor','docs','documentacion','public'] as $directory){
             $url=$scheme.'://127.0.0.1:'.$port.($path!==''?'/'.$path:'').'/'.$directory.'/protection-check.txt';
             $context=stream_context_create(['http'=>['method'=>'GET','ignore_errors'=>true,'follow_location'=>0,'timeout'=>2,'header'=>"Connection: close\r\n"],'ssl'=>['verify_peer'=>true,'verify_peer_name'=>true]]);
             $http_response_header=[];@file_get_contents($url,false,$context);
@@ -37,9 +37,9 @@ final class Local
     public static function privateDirectory(): string {
         $document=realpath($_SERVER['DOCUMENT_ROOT']??dirname(ROOT));
         if($document===false){throw new RuntimeException('No se pudo resolver htdocs.');}
-        $base=dirname($document).'/sipe-v2-private';
+        $base=dirname($document).'/sipe-grupo-5-private';
         $directory=$base.'/'.hash('sha256',strtolower(str_replace('\\','/',ROOT)));
-        if(!is_dir($directory)&&!@mkdir($directory,0700,true)){throw new RuntimeException('Apache necesita escritura en la carpeta sipe-v2-private situada junto a htdocs.');}
+        if(!is_dir($directory)&&!@mkdir($directory,0700,true)){throw new RuntimeException('Apache necesita escritura en la carpeta sipe-grupo-5-private situada junto a htdocs.');}
         $resolved=strtolower(str_replace('\\','/',(string)realpath($directory))).'/';
         foreach([$document,ROOT] as $public){$prefix=strtolower(str_replace('\\','/',(string)realpath($public))).'/';if(str_starts_with($resolved,$prefix)){throw new RuntimeException('La carpeta privada debe estar fuera de htdocs.');}}
         return $directory;

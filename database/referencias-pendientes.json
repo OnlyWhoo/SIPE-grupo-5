@@ -1,0 +1,79 @@
+[
+    {
+        "fila": 111,
+        "tipo": "PLANCHAS",
+        "nombre": "PLANCHA OSTER",
+        "referencia": "000606…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 114,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL DELL No. 18 + CARGADOR + FUNDA",
+        "referencia": "008654…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 115,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL DELL No. 14 + CARGADOR + FUNDA",
+        "referencia": "008655…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 116,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL DELL No. 8 + CARGADOR + FUNDA",
+        "referencia": "008662…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 117,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL DELL No. 15 + CARGADOR + FUNDA",
+        "referencia": "008667…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 118,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL DELL No. 2 + CARGADOR + FUNDA",
+        "referencia": "008671…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 119,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL LATITUDE 3470 # 30 TAG: BTP74F2 EXP SER COD: 25740447518",
+        "referencia": "008879…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 120,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL LATITUDE 3470 # 44 TAG: 2VP74F2 EXP SER COD: 6270338846",
+        "referencia": "008893…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 121,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL LATITUDE 3470 # 39 TAG: 7VP74F2 EXP SER COD: 17154250526",
+        "referencia": "009083…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 122,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL LATITUDE 3470 # 35 TAG: FTP74F2 EXP SER COD: 34447576862",
+        "referencia": "009086…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    },
+    {
+        "fila": 123,
+        "tipo": "PORTATILES",
+        "nombre": "PORTATIL LATITUDE 3470 # 28 TAG: 5TP74F2 EXP SER COD: 12679753502",
+        "referencia": "009096…",
+        "observaciones": "Referencia truncada | Referencia parcial: NO usar como identificador único hasta confirmar."
+    }
+]

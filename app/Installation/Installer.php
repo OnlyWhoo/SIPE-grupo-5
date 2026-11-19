@@ -15,9 +15,9 @@ final class Installer
     }
     public static function parameters(array $input): array {
         foreach(['host','port','database','user','password'] as $key){if(isset($input[$key])&&!is_string($input[$key])){throw new RuntimeException('Formato de conexión inválido.');}}
-        $host=$input['host']??'127.0.0.1';$port=$input['port']??'3306';$database=$input['database']??'sipe_v2';
+        $host=$input['host']??'127.0.0.1';$port=$input['port']??'3306';$database=$input['database']??'sipe_grupo_5';
         if(!in_array($host,['127.0.0.1','localhost','::1'],true)||!ctype_digit($port)||(int)$port<1||(int)$port>65535||(int)$port===3307){throw new RuntimeException('Usa el servidor local de XAMPP y su puerto MySQL configurado (3306 de forma predeterminada).');}
-        if(!preg_match('/\Asipe_v2(?:_[a-zA-Z0-9]+)*\z/D',$database)||strlen($database)>64){throw new RuntimeException('Elige sipe_v2 o un nombre nuevo que comience por sipe_v2_. Nunca se utiliza la base sipe original.');}
+        if(!preg_match('/\Asipe_grupo_5(?:_[a-zA-Z0-9]+)*\z/D',$database)||strlen($database)>64){throw new RuntimeException('Elige sipe_grupo_5 o un nombre nuevo que comience por sipe_grupo_5_.');}
         $user=$input['user']??'root';if($user===''||strlen($user)>80||strlen($input['password']??'')>1024){throw new RuntimeException('Revisa la cuenta MySQL.');}
         return ['host'=>$host,'port'=>$port,'database'=>$database,'user'=>$user,'password'=>$input['password']??''];
     }
@@ -44,13 +44,11 @@ final class Installer
         if(PHP_SAPI==='cli' && getenv('SIPE_V2_TEST_FAIL_AT')===$name){throw new RuntimeException('Synthetic interruption: '.$name);}
     }
     public function install(array $input,string $base,array $admin): array {
-        $dataDirectory=dirname($this->planPath);
-        $privatePath=$dataDirectory.'/entrega-privada.json';
-        $data=is_file($privatePath)?Entrega::read($privatePath):null;
-        $catalog=$data===null?['programas'=>[],'recursos'=>[]]:Entrega::read($dataDirectory.'/inventario-entrega.json');
+        $datos=DatosAcademicos::leer(dirname($this->planPath));
+        $huellaDatos=hash_file('sha256',dirname($this->planPath).'/datos-academicos.json');
         $p=self::parameters($input);$file=@fopen($this->private.'/installation.lock','c');
         if(!$file||!flock($file,LOCK_EX)){throw new RuntimeException('No se pudo bloquear la instalación local.');}
-        $pdo=null;$locked=false;$lock='sipe-v2:'.substr(hash('sha256',$p['database']),0,48);
+        $pdo=null;$locked=false;$lock='sipe-grupo-5:'.substr(hash('sha256',$p['database']),0,48);
         try {
             $pdo=self::connect($p);$q=$pdo->prepare('SELECT GET_LOCK(?,10)');$q->execute([$lock]);$locked=(int)$q->fetchColumn()===1;
             if(!$locked){throw new RuntimeException('Otra instalación está en curso. Vuelve a intentar.');}
@@ -59,13 +57,13 @@ final class Installer
             if($state && (($state['parameters']['database']??'')!==$p['database']||($state['parameters']['host']??'')!==$p['host']||($state['parameters']['port']??'')!==$p['port'])){$state=null;}
             if(!$state&&is_file($this->recordPath($p))){$state=json_decode((string)file_get_contents($this->recordPath($p)),true,512,JSON_THROW_ON_ERROR);}
             $q=$pdo->prepare('SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?');$q->execute([$p['database']]);$exists=(int)$q->fetchColumn()>0;
-            if($exists && !$state){throw new RuntimeException('La base ya existe y no pertenece de forma verificable a esta instalación. No se modificó. Elige otro nombre nuevo sipe_v2_*.');}
-            if(!$state){$state=['owner'=>bin2hex(random_bytes(32)),'plan'=>$this->digest,'parameters'=>$p];$this->state($state);}
-            if(!hash_equals($state['plan']??'',$this->digest)){throw new RuntimeException('La versión pendiente no coincide. Conserva la carpeta privada y solicita revisión técnica.');}
+            if($exists && !$state){throw new RuntimeException('La base ya existe y no pertenece de forma verificable a esta instalación. No se modificó. Elige otro nombre nuevo sipe_grupo_5_*.');}
+            if(!$state){$state=['owner'=>bin2hex(random_bytes(32)),'plan'=>$this->digest,'datos'=>$huellaDatos,'parameters'=>$p];$this->state($state);}
+            if(!hash_equals($state['plan']??'',$this->digest)||!hash_equals($state['datos']??'',$huellaDatos)){throw new RuntimeException('La versión pendiente no coincide. Conserva la carpeta privada y solicita revisión técnica.');}
             $state['parameters']=$p;$this->state($state);
             if(!$exists){
                 try{$pdo->exec('CREATE DATABASE `'.$p['database'].'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');}
-                catch(PDOException $e){if(in_array($e->errorInfo[1]??0,[1044,1045,1142,1227],true)){throw new RuntimeException('La cuenta MySQL no permite crear esta base nueva. Solicita al administrador autorización CREATE para ese nombre y permisos de esquema, vistas y operaciones de SIPE V2. No se usan bases desconocidas preexistentes.');}throw $e;}
+                catch(PDOException $e){if(in_array($e->errorInfo[1]??0,[1044,1045,1142,1227],true)){throw new RuntimeException('La cuenta MySQL no permite crear esta base nueva. Solicita al administrador autorización CREATE para ese nombre y permisos de esquema, vistas y operaciones de SIPE Grupo 5. No se usan bases desconocidas preexistentes.');}throw $e;}
                 $pdo->exec('USE `'.$p['database'].'`');
                 $pdo->exec('CREATE TABLE sipe_v2_installation(id TINYINT PRIMARY KEY,owner CHAR(64) NOT NULL,plan CHAR(64) NOT NULL,phase VARCHAR(20) NOT NULL,version VARCHAR(20) NOT NULL, CHECK(id=1)) ENGINE=InnoDB');
                 $pdo->prepare("INSERT INTO sipe_v2_installation VALUES(1,?,?,'schema',?)")->execute([$state['owner'],$this->digest,$this->plan['version']]);
@@ -88,7 +86,7 @@ final class Installer
                 $pdo->beginTransaction();
                 try{
                     foreach(array_keys($this->plan['tables']) as $table){if((int)$pdo->query('SELECT COUNT(*) FROM `'.$table.'`')->fetchColumn()!==0){throw new RuntimeException('Una instalación pendiente contiene datos inesperados. No se sobrescriben.');}}
-                    Entrega::seed($pdo,$admin,$catalog,$data);$this->checkpoint('seed');
+                    DatosAcademicos::restaurar($pdo,$this->plan,$datos,$admin);$this->checkpoint('seed');
                     $pdo->exec("UPDATE sipe_v2_installation SET phase='ready' WHERE id=1");$pdo->commit();
                 }catch(\Throwable $e){if($pdo->inTransaction()){$pdo->rollBack();}throw $e;}
             }elseif($marker['phase']!=='ready'){throw new RuntimeException('Estado de instalación desconocido.');}
@@ -97,7 +95,7 @@ final class Installer
                 $check->execute([$admin['correo']]);
                 $hash=$check->fetchColumn();
                 if($hash===false||(!hash_equals($hash,$admin['hash'])&&!password_verify($admin['password']??'',$hash))){
-                    throw new RuntimeException('Para reanudar, utiliza la misma cuenta de SIPE V2 que elegiste al iniciar.');
+                    throw new RuntimeException('Para reanudar, utiliza la misma contraseña de evaluación que elegiste al iniciar.');
                 }
             }
             $this->checkpoint('configured');

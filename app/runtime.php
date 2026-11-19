@@ -23,11 +23,11 @@ try {
     $private=\Sipe\Installation\Local::privateDirectory();ini_set('error_log',$private.'/php-error.log');
     $configFile=$private.'/local.php';if(is_file($configFile)){$config=require $configFile;$config['base_path']=$base;}
     $migrationLock=fopen($private.'/migration.lock','c');
-    if(!$migrationLock||!flock($migrationLock,LOCK_SH|LOCK_NB)){throw new RuntimeException('La actualización de SIPE V2 está en curso. Vuelve a abrir la aplicación al finalizar.');}
+    if(!$migrationLock||!flock($migrationLock,LOCK_SH|LOCK_NB)){throw new RuntimeException('La actualización de SIPE Grupo 5 está en curso. Vuelve a abrir la aplicación al finalizar.');}
     $sessions=$private.'/sessions';if(!is_dir($sessions)&&!mkdir($sessions,0700,true)){throw new RuntimeException('No se pudo crear el almacenamiento privado de sesiones.');}
     ini_set('session.use_strict_mode','1');ini_set('session.use_only_cookies','1');
     $sessionScope=ROOT.(($config['demo_local']??false)?'':($config['plan']??'setup'));
-    session_name('SIPEV2_'.substr(hash('sha256',$sessionScope),0,12));session_save_path($sessions);
+    session_name('SIPEGRUPO5_'.substr(hash('sha256',$sessionScope),0,12));session_save_path($sessions);
     session_set_cookie_params(['httponly'=>true,'secure'=>$config['secure_cookie'],'samesite'=>'Lax','path'=>$base.'/']);session_start();
     if(!is_file($configFile)){require ROOT.'/app/setup.php';exit;}
     $db=\Sipe\Models\Database::get();$marker=$db->query('SELECT owner,plan,phase FROM sipe_v2_installation WHERE id=1')->fetch();
@@ -39,6 +39,6 @@ try {
     $config['profiles']=!$legacy;
 }catch(Throwable $error){
     http_response_code(503);$message=$error instanceof PDOException?'No se puede conectar a la base configurada. Inicia MySQL/MariaDB y verifica la configuración privada. No se reinstala ni se cambian datos.':$error->getMessage();
-    if(isset($private)){error_log('SIPE V2 bootstrap: '.get_class($error));}
-    echo '<!doctype html><html lang="es"><meta charset="utf-8"><title>SIPE V2 — revisar instalación</title><h1>Revisar instalación de SIPE V2</h1><p>'.e($message).'</p><p>Consulta README.md. No borres bases ni la carpeta privada para intentar reinstalar.</p></html>';exit;
+    if(isset($private)){error_log('SIPE Grupo 5 arranque: '.get_class($error));}
+    echo '<!doctype html><html lang="es"><meta charset="utf-8"><title>SIPE Grupo 5 — revisar instalación</title><h1>Revisar instalación de SIPE Grupo 5</h1><p>'.e($message).'</p><p>Consulta README.md. No borres bases ni la carpeta privada para intentar reinstalar.</p></html>';exit;
 }
