@@ -59,3 +59,7 @@ SIPE prepara la cuenta de evaluación existente con `password_hash()` y verifica
 La versión correctiva es `v1.0.1`. El ZIP se construye desde el commit publicado e incluye un manifiesto SHA-256 de sus archivos. El SHA-256 del ZIP se publica por separado en la [versión de GitHub](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.1).
 
 Consulte los resultados de instalación, reinicio, cotejo de datos, portabilidad, seguridad y reglas de negocio en [Pruebas de la entrega](documentacion/PRUEBAS.md).
+
+**Evidencias de pruebas.** El proyecto cuenta con un paquete de evidencias de pruebas funcionales, unitarias, de integración, concurrencia y validación del sistema.
+
+[Descargar evidencias de pruebas — SIPE-PRUEBAS.zip](https://github.com/OnlyWhoo/SIPE-grupo-5/releases/download/v1.0.1/SIPE-PRUEBAS.zip)
