@@ -1,0 +1,17 @@
+/var/*
+!/var/.gitkeep
+!/var/protection-check.txt
+/dist/
+/config/*.local.php
+/config/local.php
+/.tools/
+*.log
+*.pid
+.env*
+/*.xlsx
+/*.xlsm
+/*.xls
+/*.zip
+/database/entrega-privada.json
+/database/arranque-privado.json
+/database/inventario-entrega.json

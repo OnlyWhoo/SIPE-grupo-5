@@ -1,0 +1,20 @@
+SIPE V2 · ENTREGA ACADÉMICA
+
+1. Extrae el ZIP en htdocs de XAMPP. Debe quedar htdocs/SIPE-V2/index.php.
+2. Inicia Apache y MySQL desde el panel de XAMPP.
+3. Abre http://localhost/SIPE-V2/ en el navegador.
+4. Inicia sesión con las credenciales de evaluación entregadas por separado.
+
+La primera visita prepara el esquema y los datos. Si aparece el asistente,
+indica las credenciales autorizadas de MariaDB/MySQL de XAMPP. Usa 3306
+salvo que tu XAMPP esté configurado con otro puerto. Si sipe_v2 ya existe,
+elige un nombre nuevo como sipe_v2_evaluacion.
+
+En Solicitud de Recursos puedes identificar a un prestatario por código o QR.
+Las autorizaciones de estudiantes se configuran en Autorización académica.
+Docentes y administrativos reservan o reciben recursos de forma directa,
+sujetos a disponibilidad y a los controles de préstamo. En Sanciones,
+el administrador busca por código y selecciona un préstamo del usuario.
+
+El ZIP contiene datos personales autorizados para la evaluación. Compártelo
+por el canal académico restringido. Consulta README.md para más información.
