@@ -1,20 +1,17 @@
-SIPE V2 · ENTREGA ACADÉMICA
+SIPE GRUPO 5 — GUÍA RÁPIDA PARA EL PROFESOR
 
-1. Extrae el ZIP en htdocs de XAMPP. Debe quedar htdocs/SIPE-V2/index.php.
-2. Inicia Apache y MySQL desde el panel de XAMPP.
-3. Abre http://localhost/SIPE-V2/ en el navegador.
-4. Inicia sesión con las credenciales de evaluación entregadas por separado.
+1. Descargue SIPE-GRUPO-5-ENTREGA-FINAL.zip desde
+   https://github.com/OnlyWhoo/SIPE-grupo-5/releases/tag/v1.0.0
+2. Extráigalo dentro de C:\xampp\htdocs. Debe quedar
+   C:\xampp\htdocs\SIPE-grupo-5\index.php.
+3. Inicie Apache y MySQL en el panel de XAMPP.
+4. Abra http://localhost/SIPE-grupo-5/.
+5. Complete el asistente con la conexión SQL autorizada y el nombre
+   de una base nueva, por ejemplo sipe_grupo_5.
+6. Elija una contraseña de evaluación de al menos 15 caracteres.
+   Inicie sesión con profesor@sipe.local y la contraseña que eligió.
+7. Abra Solicitud de Recursos o consulte el manual en documentacion.
 
-La primera visita prepara el esquema y los datos. Si aparece el asistente,
-indica las credenciales autorizadas de MariaDB/MySQL de XAMPP. Usa 3306
-salvo que tu XAMPP esté configurado con otro puerto. Si sipe_v2 ya existe,
-elige un nombre nuevo como sipe_v2_evaluacion.
-
-En Solicitud de Recursos puedes identificar a un prestatario por código o QR.
-Las autorizaciones de estudiantes se configuran en Autorización académica.
-Docentes y administrativos reservan o reciben recursos de forma directa,
-sujetos a disponibilidad y a los controles de préstamo. En Sanciones,
-el administrador busca por código y selecciona un préstamo del usuario.
-
-El ZIP contiene datos personales autorizados para la evaluación. Compártelo
-por el canal académico restringido. Consulta README.md para más información.
+La contraseña MySQL es la de su instalación de XAMPP. La contraseña
+de evaluación se configura en el asistente. Puede detener y volver a
+iniciar Apache y MySQL desde XAMPP para continuar con la misma base.
